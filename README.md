@@ -15,7 +15,7 @@ Most packages are stable at python version 3.10, so we use it as default as note
 - Each person has their own branch for development, please use those rather than pushing everything to `main`
 
 - Naming of the branches should be so that it would be possible to identify
-who is the owner of a branch (for example, jd-dev where "jd" stands for John Doe).
+who is the owner of a branch (for example, `jd-dev` where "jd" stands for John Doe).
 
 - Avoid using `--amend` and `force` stuff (only use when necessary) as those might affect the work of other people.
 - Write readable commit messages.
