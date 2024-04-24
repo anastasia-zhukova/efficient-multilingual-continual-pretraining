@@ -44,7 +44,7 @@ Tests are good (we suggest using `pytest`) but not necessary and should be kept 
 
 ### Logging
 Logging is also good and is often helpful. `loguru` provides straightforward logging out-of-the-box.
-Please store logs in the `logs` folder which is excluded from versioning in .gitignore
+Please store logs in the `logs` folder which is excluded from versioning in `.gitignore`
 and do not version those to avoid clutter.
 
 ### Poetry
