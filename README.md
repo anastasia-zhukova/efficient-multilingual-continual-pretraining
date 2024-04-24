@@ -4,6 +4,7 @@
 
 **tldr**: use your branch, tests and logging are good, NumPy style for docstrings, use poetry, isort, black and ruff.
 Name stuff adequately, use PEP and all the programming knowledge you have.
+
 ---
 
 ### Python
@@ -12,14 +13,14 @@ Most packages are stable at python version 3.10, so we use it as default as note
 `pyproject.toml`. If you have any reasoning against that, please let us know and we'd discuss that.
 
 ### Git
-- Each person has their own branch for development, please use those rather than pushing everything to `main`
+- Each person has their own branch for development, please use those rather than pushing everything to `master`
 
 - Naming of the branches should be so that it would be possible to identify
 who is the owner of a branch (for example, `jd-dev` where "jd" stands for John Doe).
 
 - Avoid using `--amend` and `force` stuff (only use when necessary) as those might affect the work of other people.
 - Write readable commit messages.
-- In general, the `main` branch should only contain code that is stable and "production-ready"
+- In general, the `master` branch should only contain code that is stable and "production-ready"
 (so no random exceptions would show up if we were to run it).
 - Avoid storing and versioning some redundant files like `123123.py` or `test.ipynb`. Only stage and version
 the stuff that is relevant to the project.
