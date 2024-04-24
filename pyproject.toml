@@ -1,0 +1,64 @@
+[tool.poetry]
+name = "efficient-multilingual-continual-pretraining"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+license = "MIT License"
+readme = "README.md"
+
+###############################################################################
+[tool.poetry.dependencies]
+python = "^3.10"
+
+# Adding another group for dev dependencies so for production we could have only the relevant ones.
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+jupyter = "^1.0.0"
+
+# Converage should only include the src/ folder.
+[tool.coverage.run]
+source = ['efficient_multilingual_continual_pretraining']
+
+###############################################################################
+# File watcher settings.
+[tool.isort]
+line_length = 120
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+no_lines_before = ["STDLIB", "LOCALFOLDER"]
+known_third_party = []
+multi_line_output = 3
+lines_after_imports = 2
+profile = "black"
+combine_as_imports = true
+
+[tool.black]
+line-length = 120
+target-version = ["py310"]
+
+[tool.ruff]
+fix = true
+
+lint.select = ["ALL"]
+lint.ignore = ["I","EM","FBT","TRY003","S101","D101","D102","D103","D104","D105","G004","D107","D211","D213","FA102","ANN101", "FIX002", "TD002", "TD003"]
+
+lint.fixable = ["ALL"]
+lint.unfixable = ["F841"]
+
+exclude = [
+    ".git",
+    ".ruff_cache",
+    "venv",
+]
+
+line-length = 120
+
+target-version = "py310"
+
+cache-dir = "~/.cache/ruff"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
