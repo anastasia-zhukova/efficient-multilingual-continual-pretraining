@@ -9,9 +9,12 @@ readme = "README.md"
 ###############################################################################
 [tool.poetry.dependencies]
 python = "^3.10"
+pandas = "^2.2.2"
+matplotlib = "^3.8.4"
+seaborn = "^0.13.2"
 
-# Adding another group for dev dependencies so for production we could have only the relevant ones.
 [tool.poetry.group.dev.dependencies]
+# Adding another group for dev dependencies so for production we could have only the relevant ones.
 pytest = "*"
 jupyter = "^1.0.0"
 
