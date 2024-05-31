@@ -1,0 +1,7 @@
+defaults:
+  - task: amazon_reviews
+  - _self_
+
+random_seed: 42
+use_cuda_for_train: true
+use_watcher: true
