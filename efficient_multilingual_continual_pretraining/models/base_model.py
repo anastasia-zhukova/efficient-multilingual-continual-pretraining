@@ -28,13 +28,8 @@ class BaseModel(nn.Module):
         self.head = head
         self.softmax = nn.Softmax(dim=1)
 
-    def forward(
-        self,
-        input_text,
-        cast_to_probabilities: bool = False,
-    ):
-        embeddings = self.get_embeddings(input_text)
-        return self.process_from_embeddings(embeddings, cast_to_probabilities)
+    def forward(self, **kwargs):
+        raise NotImplementedError
 
     def get_embeddings(
         self,

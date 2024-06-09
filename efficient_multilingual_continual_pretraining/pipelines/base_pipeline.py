@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 
 from efficient_multilingual_continual_pretraining.constants import PROJECT_ROOT
 from efficient_multilingual_continual_pretraining.data import BaseDataset
-from efficient_multilingual_continual_pretraining.models import BaseModel, Trainer
+from efficient_multilingual_continual_pretraining.models import BaseTrainer, ClassificationModel
 
 
 class AmazonReviewsPipeline:
@@ -57,11 +57,11 @@ class AmazonReviewsPipeline:
             nn.Linear(hidden_size // 2, num_labels),
         )
 
-        model = BaseModel(model_head, **task_config["model"])
+        model = ClassificationModel(model_head, **task_config["model"])
         model = model.to(device)
         optimizer = AdamW(model.parameters(), **task_config["optimizer"])
 
-        trainer = Trainer(config["use_watcher"], device, mode="multi-class")
+        trainer = BaseTrainer(config["use_watcher"], device, mode="multi-class")
         trainer.train(
             model,
             optimizer,
@@ -72,6 +72,7 @@ class AmazonReviewsPipeline:
 
         torch.save(model.cpu().state_dict(), PROJECT_ROOT / task_config["save_path"])
 
+    # TODO: add other categories falling under electronics as well.
     @staticmethod
     def _clean_df(dataframe: pd.DataFrame) -> pd.DataFrame:
         dataframe = dataframe[(dataframe["language"] == "de") & (dataframe["product_category"] == "electronics")]

@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 
 from efficient_multilingual_continual_pretraining.constants import PROJECT_ROOT
 from efficient_multilingual_continual_pretraining.data import CaresDataset
-from efficient_multilingual_continual_pretraining.models import BaseModel, Trainer
+from efficient_multilingual_continual_pretraining.models import BaseTrainer, ClassificationModel
 
 
 class CaresPipeline:
@@ -59,11 +59,11 @@ class CaresPipeline:
             nn.Linear(hidden_size // 2, total_classes),
         )
 
-        model = BaseModel(model_head, **task_config["model"])
+        model = ClassificationModel(model_head, **task_config["model"])
         model = model.to(device)
         optimizer = AdamW(model.parameters(), **task_config["optimizer"])
 
-        trainer = Trainer(config["use_watcher"], device, mode="multi-label", criterion=torch.nn.BCELoss())
+        trainer = BaseTrainer(config["use_watcher"], device, mode="multi-label", criterion=torch.nn.BCELoss())
         trainer.train(
             model,
             optimizer,

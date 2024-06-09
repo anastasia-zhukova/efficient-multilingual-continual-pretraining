@@ -5,19 +5,20 @@ from tqdm import tqdm
 import wandb
 from efficient_multilingual_continual_pretraining import logger
 from efficient_multilingual_continual_pretraining.metrics import MetricCalculator
-from efficient_multilingual_continual_pretraining.utils import generate_device
+from efficient_multilingual_continual_pretraining.utils import generate_device, verbose_iterator
 
 
-class Trainer:
+class BaseTrainer:
     def __init__(
         self,
         use_wandb: bool,
         device: torch.device,
         criterion: torch.nn.Module = nn.CrossEntropyLoss(),
         mode: str = "binary",
+        n_classes: int | None = None,
     ) -> None:
 
-        self.metric_calculator = MetricCalculator(mode)
+        self.metric_calculator = MetricCalculator(device, mode, n_classes)
         self.criterion = criterion
         self.device = device
         self.use_wandb = use_wandb
@@ -64,6 +65,7 @@ class Trainer:
                 )
                 current_epoch_scores["val"] = epoch_val_scores
 
+            logger.debug(f"Current scores: {current_epoch_scores}")
             current_epoch_scores["train_epoch"] = epoch
             if watch:
                 try:
@@ -84,7 +86,7 @@ class Trainer:
 
         logger.info("Started training the model.")
         model.train()
-        pbar = tqdm(train_dataloader, leave=False, desc="Training model") if verbose else train_dataloader
+        pbar = verbose_iterator(train_dataloader, verbose, leave=False, desc="Training model")
         self.metric_calculator.reset()
         train_loss = 0.0
 
@@ -93,7 +95,7 @@ class Trainer:
             targets_batch = targets_batch.to(self.device)
 
             optimizer.zero_grad()
-            predicted_logits = model(items_batch, cast_to_probabilities=False)
+            predicted_logits = model(**items_batch, cast_to_probabilities=False)
             loss = self.criterion(predicted_logits, targets_batch)
 
             # We use running loss and scores to avoid double-running through the train dataset. This does not
@@ -132,7 +134,7 @@ class Trainer:
             items_batch = {key: tensor.to(self.device) for key, tensor in items_batch.items()}
             targets_batch = targets_batch.to(self.device)
 
-            predicted_logits = model(items_batch, cast_to_probabilities=False)
+            predicted_logits = model(**items_batch, cast_to_probabilities=False)
             loss = self.criterion(predicted_logits, targets_batch)
 
             val_loss += loss.item() * len(targets_batch)

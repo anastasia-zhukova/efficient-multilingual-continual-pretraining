@@ -16,6 +16,9 @@ class BaseDataset(Dataset):
         self.object_to_return = object_to_return
         self.targets = targets
 
+    def __len__(self):
+        return len(self.object_to_return)
+
     def __getitem__(
         self,
         index: int,
@@ -24,10 +27,10 @@ class BaseDataset(Dataset):
             return self.object_to_return.iloc[index], self.targets.iloc[index]
         return self.object_to_return.iloc[index]
 
-    def __len__(self):
-        return len(self.object_to_return)
-
-    def collate_fn(self, batch_data: list) -> BatchEncoding | tuple[BatchEncoding, torch.Tensor]:
+    def collate_fn(
+        self,
+        batch_data: list,
+    ) -> dict[str, BatchEncoding] | tuple[dict[str, BatchEncoding], torch.Tensor]:
         if self.targets is not None:
             items_to_encode, targets = zip(*batch_data, strict=False)
             targets = torch.LongTensor(targets)
@@ -46,6 +49,6 @@ class BaseDataset(Dataset):
             truncation=True,
         )
 
-        if targets is not None:
-            return items_encodings, targets
-        return items_encodings
+        encodings = {"input_text": items_encodings}
+
+        return encodings, targets if targets is not None else encodings
