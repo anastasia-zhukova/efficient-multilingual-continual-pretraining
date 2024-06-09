@@ -5,7 +5,11 @@ import transformers
 from omegaconf import DictConfig, OmegaConf
 
 import wandb
-from efficient_multilingual_continual_pretraining.pipelines import AmazonReviewsPipeline, CaresPipeline
+from efficient_multilingual_continual_pretraining.pipelines import (
+    AmazonReviewsPipeline,
+    CaresPipeline,
+    OpenRepairPipeline,
+)
 from efficient_multilingual_continual_pretraining.utils import generate_device, seed_everything
 
 
@@ -30,6 +34,8 @@ def main(config: DictConfig) -> None:
         pipeline = AmazonReviewsPipeline()
     elif config["task"]["task_name"] == "cares":
         pipeline = CaresPipeline()
+    elif config["task"]["task_name"] == "openrepair":
+        pipeline = OpenRepairPipeline(seed=config["random_seed"])
     else:
         raise ValueError("Unsupported model type: should be either `bert` or `catboost`!")
 
