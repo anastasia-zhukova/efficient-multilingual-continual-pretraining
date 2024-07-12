@@ -35,7 +35,7 @@ class CaresDataset(Dataset):
     def collate_fn(
         self,
         batch_data: list,
-    ) -> dict[str, BatchEncoding] | tuple[dict[str, BatchEncoding], torch.Tensor]:
+    ) -> dict[str, BatchEncoding | torch.Tensor]:
         if self.targets is not None:
             items_to_encode, raw_targets = zip(*batch_data, strict=False)
             targets = torch.zeros((len(raw_targets), self.total_classes))
@@ -56,6 +56,8 @@ class CaresDataset(Dataset):
             truncation=True,
         )
 
-        encodings = {"input_text": items_encodings, "cast_to_probabilities": True}
+        result = {"input_text": items_encodings}
+        if targets is not None:
+            result["targets"] = targets
 
-        return encodings, targets if targets is not None else encodings
+        return result

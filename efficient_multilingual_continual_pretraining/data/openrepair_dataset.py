@@ -35,14 +35,14 @@ class OpenRepairDataset(Dataset):
     def collate_fn(
         self,
         batch_data: list,
-    ) -> tuple[dict[str, BatchEncoding], torch.LongTensor] | dict[str, BatchEncoding]:
+    ) -> dict[str, BatchEncoding | torch.Tensor]:
         items_to_encode, targets = zip(*batch_data, strict=False)
         targets = torch.LongTensor(targets)
 
         questions = [x["problem"] for x in items_to_encode]
         answers = [x["solution"] for x in items_to_encode]
 
-        encodings = {}
+        result = {}
         items_to_encode = [[questions], [answers]]
         item_names = ["question_text", "answer_text"]
         for item_to_encode, item_name in zip(items_to_encode, item_names, strict=True):
@@ -52,6 +52,7 @@ class OpenRepairDataset(Dataset):
                 padding=True,
                 truncation=True,
             )
-            encodings[item_name] = item_encoding
+            result[item_name] = item_encoding
 
-        return encodings, targets
+        result["targets"] = targets
+        return result

@@ -59,11 +59,17 @@ class CaresPipeline:
             nn.Linear(hidden_size // 2, total_classes),
         )
 
-        model = ClassificationModel(model_head, **task_config["model"])
+        model = ClassificationModel(model_head, use_sigmoid_instead_of_softmax=True, **task_config["model"])
         model = model.to(device)
         optimizer = AdamW(model.parameters(), **task_config["optimizer"])
 
-        trainer = BaseTrainer(config["use_watcher"], device, mode="multi-label", criterion=torch.nn.BCELoss())
+        trainer = BaseTrainer(
+            config["use_watcher"],
+            device,
+            mode="multi-label",
+            criterion=torch.nn.BCEWithLogitsLoss(),
+            n_classes=total_classes,
+        )
         trainer.train(
             model,
             optimizer,

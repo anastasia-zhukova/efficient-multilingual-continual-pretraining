@@ -12,8 +12,11 @@ class ClassificationModel(BaseModel):
         mode: Literal["finetune", "pretrain"] = "finetune",
         bert_model_name: str = "bert-base-uncased",
         local_files_only: bool = False,
+        use_sigmoid_instead_of_softmax: bool = False,
     ) -> None:
-        super(ClassificationModel, self).__init__(head, mode, bert_model_name, local_files_only)
+        super(ClassificationModel, self).__init__(
+            head, mode, bert_model_name, local_files_only, use_sigmoid_instead_of_softmax=use_sigmoid_instead_of_softmax
+        )
 
     def forward(
         self,

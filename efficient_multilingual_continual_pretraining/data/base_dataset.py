@@ -30,7 +30,7 @@ class BaseDataset(Dataset):
     def collate_fn(
         self,
         batch_data: list,
-    ) -> dict[str, BatchEncoding] | tuple[dict[str, BatchEncoding], torch.Tensor]:
+    ) -> dict[str, BatchEncoding | torch.Tensor]:
         if self.targets is not None:
             items_to_encode, targets = zip(*batch_data, strict=False)
             targets = torch.LongTensor(targets)
@@ -49,6 +49,8 @@ class BaseDataset(Dataset):
             truncation=True,
         )
 
-        encodings = {"input_text": items_encodings}
+        result = {"input_text": items_encodings}
+        if targets is not None:
+            result["targets"] = targets
 
-        return encodings, targets if targets is not None else encodings
+        return result

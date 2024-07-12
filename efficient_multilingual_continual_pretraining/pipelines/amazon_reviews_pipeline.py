@@ -10,9 +10,6 @@ from efficient_multilingual_continual_pretraining.models import BaseTrainer, Cla
 
 
 class AmazonReviewsPipeline:
-    # def __init__(self, seed):
-    #     self.seed = seed
-
     @classmethod
     def run(
         cls,

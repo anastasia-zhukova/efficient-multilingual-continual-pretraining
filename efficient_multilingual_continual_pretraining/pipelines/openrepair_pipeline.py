@@ -72,7 +72,7 @@ class OpenRepairPipeline:
         model = QAModel(head, **task_config["model"])
         model = model.to(device)
         optimizer = AdamW(model.parameters(), **task_config["optimizer"])
-        criterion = torch.nn.CrossEntropyLoss(weight=torch.Tensor([5, 1])).to(device)
+        criterion = torch.nn.CrossEntropyLoss(weight=torch.Tensor([1, 5])).to(device)
 
         trainer = BaseTrainer(config["use_watcher"], device, mode="binary", criterion=criterion)
         trainer.train(

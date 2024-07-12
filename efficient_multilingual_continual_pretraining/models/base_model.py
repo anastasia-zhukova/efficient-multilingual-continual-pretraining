@@ -12,6 +12,7 @@ class BaseModel(nn.Module):
         mode: Literal["finetune", "pretrain"] = "finetune",
         bert_model_name: str = "bert-base-uncased",
         local_files_only: bool = False,
+        use_sigmoid_instead_of_softmax: bool = False,
     ) -> None:
         super(BaseModel, self).__init__()
 
@@ -26,7 +27,10 @@ class BaseModel(nn.Module):
         self.bert.requires_grad_(mode == "finetune")
 
         self.head = head
-        self.softmax = nn.Softmax(dim=1)
+        if use_sigmoid_instead_of_softmax:
+            self.softmax = nn.Sigmoid()
+        else:
+            self.softmax = nn.Softmax(dim=1)
 
     def forward(self, **kwargs):
         raise NotImplementedError

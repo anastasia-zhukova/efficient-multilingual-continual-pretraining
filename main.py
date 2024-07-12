@@ -8,6 +8,7 @@ import wandb
 from efficient_multilingual_continual_pretraining.pipelines import (
     AmazonReviewsPipeline,
     CaresPipeline,
+    NERPipeline,
     OpenRepairPipeline,
 )
 from efficient_multilingual_continual_pretraining.utils import generate_device, seed_everything
@@ -36,8 +37,10 @@ def main(config: DictConfig) -> None:
         pipeline = CaresPipeline()
     elif config["task"]["task_name"] == "openrepair":
         pipeline = OpenRepairPipeline(seed=config["random_seed"])
+    elif config["task"]["task_name"] in ["cantemist", "pharmaconer"]:
+        pipeline = NERPipeline()
     else:
-        raise ValueError("Unsupported model type: should be either `bert` or `catboost`!")
+        raise ValueError("Unsupported pipeline!")
 
     pipeline.run(config, device)
 

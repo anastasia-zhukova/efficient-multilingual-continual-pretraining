@@ -4,7 +4,7 @@ from pathlib import Path
 
 import torch
 from torch.utils.data import Dataset
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, BatchEncoding
 
 from efficient_multilingual_continual_pretraining import logger
 from efficient_multilingual_continual_pretraining.constants import PROJECT_ROOT
@@ -38,6 +38,7 @@ class NERDataset(Dataset):
 
         self.texts, self.annotations, mapping = self._load_data(data_folder_path)
         self.entity_mapping = entity_mapping if entity_mapping is not None else mapping
+        self.reverse_entity_mapping = {value: key for key, value in self.entity_mapping.items()}
 
         self.tokenizer = AutoTokenizer.from_pretrained(bert_model_name)
 
@@ -53,7 +54,7 @@ class NERDataset(Dataset):
     def collate_fn(
         self,
         batch_data: list[tuple[str, list[EntityObject]]],
-    ):
+    ) -> dict[str, BatchEncoding | torch.Tensor]:
         texts, annotations = zip(*batch_data, strict=True)
 
         tokens = self.tokenizer(
@@ -63,6 +64,8 @@ class NERDataset(Dataset):
             truncation=True,
             return_offsets_mapping=True,
         )
+
+        # Targets processing
         result_labels = []
         for i in range(len(batch_data)):
             labels_out = [0] * len(tokens["input_ids"][i])
@@ -83,9 +86,13 @@ class NERDataset(Dataset):
 
             result_labels.append(labels_out)
 
-        tokens["labels"] = torch.LongTensor(result_labels).view(-1)
+        del tokens["offset_mapping"]
+        result = {
+            "input_text": tokens,
+            "targets": torch.LongTensor(result_labels),
+        }
 
-        return tokens
+        return result
 
     @staticmethod
     def _load_data(base_path: Path):
@@ -99,7 +106,7 @@ class NERDataset(Dataset):
 
         texts = []
         annotations = []
-        mapping = {}
+        mapping = {"O": 0}
 
         for text_file in texts_dir.iterdir():
             annotation_file_name = text_file.with_suffix(".ann").name
@@ -114,6 +121,7 @@ class NERDataset(Dataset):
                             f"Skipping line {line} for file"
                             f" {annotations_dir / annotation_file_name} as a commented-out one.",
                         )
+                        continue
 
                     parts = line.strip().split("\t")
                     if len(parts) != 3:
@@ -123,8 +131,8 @@ class NERDataset(Dataset):
 
                     annotation = EntityObject.from_str(parts[1])
                     if f"B-{annotation.entity_name}" not in mapping:
-                        mapping[f"B-{annotation.entity_name}"] = len(mapping) + 1
-                        mapping[f"I-{annotation.entity_name}"] = len(mapping) + 1
+                        mapping[f"B-{annotation.entity_name}"] = len(mapping)
+                        mapping[f"I-{annotation.entity_name}"] = len(mapping)
 
                     annotations_per_line.append(annotation)
 
