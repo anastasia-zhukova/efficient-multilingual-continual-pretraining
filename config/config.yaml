@@ -1,5 +1,5 @@
 defaults:
-  - task: cantemist
+  - task: amazon_reviews
   - _self_
 
 random_seed: 42

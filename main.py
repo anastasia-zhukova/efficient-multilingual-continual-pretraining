@@ -2,9 +2,9 @@ import warnings
 
 import hydra
 import transformers
+import wandb
 from omegaconf import DictConfig, OmegaConf
 
-import wandb
 from efficient_multilingual_continual_pretraining.pipelines import (
     AmazonReviewsPipeline,
     CaresPipeline,

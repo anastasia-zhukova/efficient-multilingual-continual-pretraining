@@ -58,7 +58,7 @@ class AmazonReviewsPipeline:
         model = model.to(device)
         optimizer = AdamW(model.parameters(), **task_config["optimizer"])
 
-        trainer = BaseTrainer(config["use_watcher"], device, mode="multi-class")
+        trainer = BaseTrainer(config["use_watcher"], device, mode="multi-class", n_classes=num_labels)
         trainer.train(
             model,
             optimizer,
