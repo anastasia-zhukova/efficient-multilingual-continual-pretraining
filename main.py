@@ -10,6 +10,7 @@ from efficient_multilingual_continual_pretraining.pipelines import (
     CaresPipeline,
     NERPipeline,
     OpenRepairPipeline,
+    NubesPipeline,
 )
 from efficient_multilingual_continual_pretraining.utils import generate_device, seed_everything
 
@@ -39,6 +40,8 @@ def main(config: DictConfig) -> None:
         pipeline = OpenRepairPipeline(seed=config["random_seed"])
     elif config["task"]["task_name"] in ["cantemist", "pharmaconer"]:
         pipeline = NERPipeline()
+    elif config["task"]["task_name"] == "nubes":
+        pipeline = NubesPipeline()
     else:
         raise ValueError("Unsupported pipeline!")
 
