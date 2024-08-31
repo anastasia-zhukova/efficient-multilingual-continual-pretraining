@@ -1,4 +1,13 @@
-logs
+# Project-specific
+logs/
+/model_weights/
+wandb/
+outputs/
+ideas.md
+test.ipynb
+
+# Since some data might not be available publicly
+/data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

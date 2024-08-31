@@ -1,0 +1,19 @@
+task_name: openrepair
+
+data:
+  n_negative: 5
+
+model:
+  bert_model_name: "deepset/gbert-base"
+  mode: finetune
+
+dataloader:
+  num_workers: 4
+  pin_memory: true
+  batch_size: 4
+
+optimizer:
+  lr: 0.000001
+
+n_epochs: 15
+save_path: "model_weights/openrepair_model.pth"
