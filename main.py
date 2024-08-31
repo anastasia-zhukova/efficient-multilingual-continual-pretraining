@@ -11,6 +11,7 @@ from efficient_multilingual_continual_pretraining.pipelines import (
     NERPipeline,
     OpenRepairPipeline,
     NubesPipeline,
+    RCTPipeline,
 )
 from efficient_multilingual_continual_pretraining.utils import generate_device, seed_everything
 
@@ -42,6 +43,8 @@ def main(config: DictConfig) -> None:
         pipeline = NERPipeline()
     elif config["task"]["task_name"] == "nubes":
         pipeline = NubesPipeline()
+    elif config["task"]["task_name"] == "rct":
+        pipeline = RCTPipeline()
     else:
         raise ValueError("Unsupported pipeline!")
 

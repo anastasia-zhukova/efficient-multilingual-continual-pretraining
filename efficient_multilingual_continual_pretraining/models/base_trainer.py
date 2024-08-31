@@ -106,8 +106,11 @@ class BaseTrainer:
             items_batch = {
                 key: tensor.to(self.device)
                 for key, tensor in batch.items()
-                if key not in ["targets", "cast_to_probabilities"]
+                if key not in ["targets", "cast_to_probabilities", "paragraph_tokens"]
             }
+            if "paragraph_tokens" in batch:
+                items_batch["paragraph_tokens"] = batch["paragraph_tokens"]
+
             targets_batch = batch["targets"].to(self.device)
 
             optimizer.zero_grad()
@@ -159,8 +162,11 @@ class BaseTrainer:
             items_batch = {
                 key: tensor.to(self.device)
                 for key, tensor in batch.items()
-                if key not in ["targets", "cast_to_probabilities"]
+                if key not in ["targets", "cast_to_probabilities", "paragraph_tokens"]
             }
+            if "paragraph_tokens" in batch:
+                items_batch["paragraph_tokens"] = batch["paragraph_tokens"]
+
             targets_batch = batch["targets"].to(self.device)
 
             predicted_logits = model(**items_batch, cast_to_probabilities=batch.get("cast_to_probabilities", False))
