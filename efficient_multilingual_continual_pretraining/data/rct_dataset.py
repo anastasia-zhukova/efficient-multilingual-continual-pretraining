@@ -29,8 +29,7 @@ class RCTDataset(Dataset):
     ):
         super().__init__()
 
-        self.texts, self.annotations, entity_mapping = self._load_data(file_path, entity_mapping)
-        self.entity_mapping = entity_mapping
+        self.texts, self.annotations, self.entity_mapping = self._load_data(file_path, entity_mapping)
         self.reverse_entity_mapping = {value: key for key, value in self.entity_mapping.items()}
 
         self.tokenizer = AutoTokenizer.from_pretrained(bert_model_name)

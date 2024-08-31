@@ -1,6 +1,6 @@
 # Project-specific
 logs/
-model_weights/
+/model_weights/
 wandb/
 outputs/
 ideas.md

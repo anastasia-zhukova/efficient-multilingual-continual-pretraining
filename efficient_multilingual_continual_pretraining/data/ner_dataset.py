@@ -73,7 +73,6 @@ class NERDataset(Dataset):
                 if token_start == 0 and token_end == 0:
                     labels_out[token_index] = -100  # Special tokens
 
-                # TODO: might not work correctly, it would be good to ensure it always works.
                 for annotation_tag, annotation_start, annotation_end in annotations[i]:
                     if token_end > annotation_end:
                         continue
@@ -110,11 +109,11 @@ class NERDataset(Dataset):
 
         for text_file in texts_dir.iterdir():
             annotation_file_name = text_file.with_suffix(".ann").name
-            with text_file.open() as file:
+            with text_file.open(encoding="utf-8") as file:
                 texts.append(file.read())
 
             annotations_per_line = []
-            with (annotations_dir / annotation_file_name).open() as file:
+            with (annotations_dir / annotation_file_name).open(encoding="utf-8") as file:
                 for line in file:
                     if line.startswith("#"):
                         logger.debug(

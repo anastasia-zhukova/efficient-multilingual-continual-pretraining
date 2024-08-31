@@ -4,6 +4,7 @@ from .classification_model import ClassificationModel
 from .qa_model import QAModel
 from .ner_model import NERModel
 from .rct_model import RCTModel
+from .chemprot_model import ChemProtModel
 
 
 __all__ = [
@@ -13,4 +14,5 @@ __all__ = [
     "ClassificationModel",
     "NERModel",
     "RCTModel"
+    "ChemProtModel"
 ]

@@ -73,7 +73,6 @@ class NubesDataset(Dataset):
                 if token_start == 0 and token_end == 0:
                     labels_out[token_index] = -100  # Special tokens
 
-                # TODO: might not work correctly, it would be good to ensure it always works.
                 for annotation_tag, annotation_start, annotation_end in annotations[i]:
                     if token_end > annotation_end:
                         continue
