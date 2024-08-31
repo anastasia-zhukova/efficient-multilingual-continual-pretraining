@@ -79,7 +79,7 @@ being present.
 
 The dataset provides an insight on how negation and uncertainty is expressed in speech. It provides sentences with
 positions of negation/uncertainty markers as well as what is actually being affected by those. While it provides a lot
-of different classes for the affected content (like [...]), we decided to simplify the task by introducing a single 
+of different classes for the affected content (like Disorders, Procedures and various scopes), we decided to simplify the task by introducing a single 
 category for all the **affected** content. This seems like to be a logical simplification, since in the end we want to
 know **what** is being affected and **how**.
 
@@ -296,7 +296,7 @@ future production.
 | Spanish + BioMed     | BETO_Galen   | PharmaCoNER    | NER                         | N/A      | 0.542     | 0.514  | 0.528    |
 | Spanish + BioMed     | BETO_Galen   | NUBes          | NER                         | N/A      | 0.615     | 0.344  | 0.441    |
 
-#### Test
+#### Val (Dev)
 
 | Domain               | Model used   | Dataset        | Task type                   | Accuracy | Precision | Recall | F1 Score |
 |----------------------|--------------|----------------|-----------------------------|----------|-----------|--------|----------|
