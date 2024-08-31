@@ -101,11 +101,7 @@ class RCTDataset(Dataset):
         labels = torch.LongTensor(total_labels)
 
         del tokens["offset_mapping"]
-        result = {
-            "input_text": tokens,
-            "targets": labels,
-            "paragraph_tokens": paragraph_tokens
-        }
+        result = {"input_text": tokens, "targets": labels, "paragraph_tokens": paragraph_tokens}
 
         return result
 
@@ -126,12 +122,12 @@ class RCTDataset(Dataset):
             offset = 0
 
             for line in file:
-                if line == '\n':
+                if line == "\n":
                     logger.debug("Skipping line as empty!")
                     continue
 
                 if line.startswith("#"):
-                    paragraphs.append(' '.join(current_paragraph))
+                    paragraphs.append(" ".join(current_paragraph))
                     sentence_types.append(current_sentence_types)
 
                     logger.debug(
@@ -152,36 +148,18 @@ class RCTDataset(Dataset):
                         f"Cannot process line {line}: expected 2 parts after a split on tabs, found {len(parts)}!",
                     )
 
-
                 sentence_type, sentence = parts
                 entity_object = RCTEntityObject(sentence_type, offset, offset + len(sentence) + 1)
-                offset += (len(sentence) + 1)
+                offset += len(sentence) + 1
                 current_paragraph.append(sentence)
                 current_sentence_types.append(entity_object)
 
                 if entity_object.entity_name not in mapping:
                     mapping[entity_object.entity_name] = len(mapping)
 
-            paragraphs.append(''.join(current_paragraph))
+            paragraphs.append("".join(current_paragraph))
             sentence_types.append(current_sentence_types)
 
         logger.info(f"Finished building dataset at {len(paragraphs)} paragraphs.")
 
         return paragraphs[1:], sentence_types[1:], mapping
-
-if __name__ == "__main__":
-    dataset = RCTDataset(PROJECT_ROOT / "data/rct/debug.txt")
-    print(dataset[1])
-    print(dataset[1][0][1788:1933])
-    res = dataset.collate_fn([dataset[1]])
-    # print(res['input_text'])
-    # print(dataset[1])
-    # print(res['targets'])
-    # print(dataset.entity_mapping)
-    print(res['paragraph_tokens'])
-    # print(len(dataset[1][1]))
-    # print(len(res['paragraph_tokens'][0]))
-    # print(res['input_text']['offset_mapping'])
-    # paragraphs, sentence_types, mapping = RCTDataset._load_data()
-    # print(len(paragraphs), len(mapping))
-    # print(paragraphs[0][sentence_types[0][3].start:sentence_types[0][3].end])

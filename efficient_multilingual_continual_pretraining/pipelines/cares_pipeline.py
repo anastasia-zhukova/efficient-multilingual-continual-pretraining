@@ -51,7 +51,6 @@ class CaresPipeline:
             **task_config["dataloader"],
         )
 
-        # TODO: put to config?
         hidden_size = 768
         model_head = nn.Sequential(
             nn.Linear(hidden_size, hidden_size // 2),

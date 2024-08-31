@@ -40,7 +40,6 @@ class ChemProtPipeline:
             **task_config["dataloader"],
         )
 
-        # TODO: put to config?
         hidden_size = 768
         num_labels = len(train_dataset.entity_mapping)
         model_head = nn.Sequential(
@@ -60,7 +59,7 @@ class ChemProtPipeline:
             device,
             mode="multi-class",
             n_classes=num_labels,
-            criterion=nn.CrossEntropyLoss(weight=torch.tensor([3, 1, 12, 9, 3], dtype=torch.float32)).to(device)
+            criterion=nn.CrossEntropyLoss(weight=torch.tensor([3, 1, 12, 9, 3], dtype=torch.float32)).to(device),
         )
         trainer.train(
             model,

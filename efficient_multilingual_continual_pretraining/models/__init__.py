@@ -1,10 +1,10 @@
 from .base_model import BaseModel
 from .base_trainer import BaseTrainer
-from .classification_model import ClassificationModel
-from .qa_model import QAModel
-from .ner_model import NERModel
-from .rct_model import RCTModel
 from .chemprot_model import ChemProtModel
+from .classification_model import ClassificationModel
+from .ner_model import NERModel
+from .qa_model import QAModel
+from .rct_model import RCTModel
 
 
 __all__ = [
@@ -13,6 +13,6 @@ __all__ = [
     "BaseTrainer",
     "ClassificationModel",
     "NERModel",
-    "RCTModel"
-    "ChemProtModel"
+    "RCTModel",
+    "ChemProtModel",
 ]

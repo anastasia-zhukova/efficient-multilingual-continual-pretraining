@@ -137,21 +137,13 @@ class NubesDataset(Dataset):
 
                     annotation = EntityObject.from_str(parts[1])
 
-                    if annotation.entity_name not in [
-                        "NegLexMarker",
-                        "NegSynMarker",
-                        "UncLexMarker",
-                        "UncSynMarker"
-                    ]:
+                    if annotation.entity_name not in ["NegLexMarker", "NegSynMarker", "UncLexMarker", "UncSynMarker"]:
                         annotation.entity_name = "AFFECTED"
 
                     add_flag = True
 
                     for existing_annotation in annotations_per_line:
-                        if (
-                            (existing_annotation.end < annotation.start)
-                            or (existing_annotation.start > annotation.end)
-                        ):
+                        if (existing_annotation.end < annotation.start) or (existing_annotation.start > annotation.end):
                             continue
 
                         else:

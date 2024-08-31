@@ -1,10 +1,10 @@
 from .amazon_reviews_pipeline import AmazonReviewsPipeline
 from .cares_pipeline import CaresPipeline
-from .openrepair_pipeline import OpenRepairPipeline
+from .chemprot_pipeline import ChemProtPipeline
 from .ner_pipeline import NERPipeline
 from .nubes_pipeline import NubesPipeline
+from .openrepair_pipeline import OpenRepairPipeline
 from .rct_pipeline import RCTPipeline
-from .chemprot_pipeline import ChemProtPipeline
 
 
 __all__ = [
@@ -14,5 +14,5 @@ __all__ = [
     "NERPipeline",
     "NubesPipeline",
     "RCTPipeline",
-    "ChemProtPipeline"
+    "ChemProtPipeline",
 ]

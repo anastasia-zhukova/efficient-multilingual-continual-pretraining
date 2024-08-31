@@ -15,6 +15,7 @@ class SingleObject:
     start: int
     end: int
 
+
 @dataclass
 class RelationshipObject:
     entity_name: str
@@ -119,11 +120,7 @@ class ChemProtDataset(Dataset):
         labels = torch.LongTensor(batch_labels)
 
         del tokens["offset_mapping"]
-        result = {
-            "input_text": tokens,
-            "targets": labels,
-            "paragraph_tokens": batch_tokens
-        }
+        result = {"input_text": tokens, "targets": labels, "paragraph_tokens": batch_tokens}
 
         return result
 
@@ -136,7 +133,6 @@ class ChemProtDataset(Dataset):
             mapping = {}
 
         counts = {}
-
         # Entities handling
         entities = {}
         with (folder_path / "entities.tsv").open(encoding="utf-8") as file:
@@ -172,7 +168,7 @@ class ChemProtDataset(Dataset):
                     [
                         entities[source_index][first_object_name],
                         entities[source_index][second_object_name],
-                    ]
+                    ],
                 )
                 if source_index not in relations:
                     relations[source_index] = [relationship_instance]
@@ -202,25 +198,3 @@ class ChemProtDataset(Dataset):
                 abstracts[parts[0]] = parts[1] + " " + parts[2]
 
         return abstracts, relations, mapping, counts
-
-
-if __name__ == "__main__":
-    # abstracts, relations, mapping = ChemProtDataset._load_data(PROJECT_ROOT / "data/chemprot/train")
-    # print(relations["10207608"])
-    dataset = ChemProtDataset(PROJECT_ROOT / "data/chemprot/train")
-    # print(dataset.entity_mapping)
-    # res = dataset.collate_fn([dataset[227]])
-    # print(res['targets'])
-    # print(dataset[1][1])
-    # print(res['input_text'])
-    # print(dataset[1])
-    # print(res['targets'])
-    # print(dataset.entity_mapping)
-    # print(res['paragraph_tokens'])
-    # print(len(dataset[1][1]))
-    # print(res['paragraph_tokens'])
-    # print(res['input_text']['offset_mapping'])
-    # paragraphs, sentence_types, mapping = RCTDataset._load_data()
-    # print(len(paragraphs), len(mapping))
-    # print(paragraphs[0][sentence_types[0][3].start:sentence_types[0][3].end])
-    print(dataset.counts)

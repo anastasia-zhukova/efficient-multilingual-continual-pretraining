@@ -138,11 +138,3 @@ class NERDataset(Dataset):
             annotations.append(annotations_per_line)
 
         return texts, annotations, mapping
-
-
-if __name__ == "__main__":
-    dataset = NERDataset(PROJECT_ROOT / "data/cantemist/test", bert_model_name="IIC/BETO_Galen")
-    print((dataset.collate_fn([dataset[0], dataset[1], dataset[3]])["labels"] > 0).sum(dim=1))
-    print(dataset[2][1])
-    print(len(dataset[2][1]))
-    print(dataset[0])
