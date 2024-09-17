@@ -43,8 +43,7 @@ class MetricCalculator:
         predicted_logits: torch.Tensor,
         actual_classes: torch.Tensor,
     ) -> None:
-        """
-        Update the metric calculator with predicted and actual classes.
+        """Update the metric calculator with predicted and actual classes.
 
         Parameters
         ----------
@@ -62,6 +61,7 @@ class MetricCalculator:
         tensor([[0, 1, 1],
                 [1, 0, 1]])
         ```
+
         """
         if self.mode == "multi-label":
             predicted_probabilities = torch.sigmoid(predicted_logits)
@@ -80,13 +80,13 @@ class MetricCalculator:
             true_classes_expanded = self._expand_matrix(actual_classes, self.n_classes)
 
             self.true_positives += ((predicted_classes_expanded == true_classes_expanded) & true_classes_expanded).sum(
-                dim=0
+                dim=0,
             )
             self.true_negatives += ((predicted_classes_expanded == true_classes_expanded) & ~true_classes_expanded).sum(
-                dim=0
+                dim=0,
             )
             self.false_negatives += ((predicted_classes_expanded != true_classes_expanded) & true_classes_expanded).sum(
-                dim=0
+                dim=0,
             )
             self.false_positives += (
                 (predicted_classes_expanded != true_classes_expanded) & ~true_classes_expanded
@@ -161,10 +161,12 @@ class MetricCalculator:
         if array_to_expand.dtype not in integer_dtypes:
             raise ValueError(
                 f"Incorrect dtype of array to expand: found {array_to_expand.dtype},"
-                f" expected some of the {integer_dtypes}"
+                f" expected some of the {integer_dtypes}",
             )
         expanded_matrix = torch.zeros(
-            (len(array_to_expand), n_columns), dtype=torch.bool, device=array_to_expand.device
+            (len(array_to_expand), n_columns),
+            dtype=torch.bool,
+            device=array_to_expand.device,
         )
         expanded_matrix[torch.arange(len(array_to_expand)), array_to_expand] = 1
         return expanded_matrix

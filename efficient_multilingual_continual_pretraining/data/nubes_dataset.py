@@ -7,7 +7,6 @@ from torch.utils.data import Dataset
 from transformers import AutoTokenizer, BatchEncoding
 
 from efficient_multilingual_continual_pretraining import logger
-from efficient_multilingual_continual_pretraining.constants import PROJECT_ROOT
 
 
 @dataclass
@@ -76,10 +75,10 @@ class NubesDataset(Dataset):
                 for annotation_tag, annotation_start, annotation_end in annotations[i]:
                     if token_end > annotation_end:
                         continue
-                    elif annotation_start == token_start:
+                    if annotation_start == token_start:
                         labels_out[token_index] = self.entity_mapping[f"B-{annotation_tag}"]
                         break
-                    elif annotation_start < token_start:
+                    if annotation_start < token_start:
                         labels_out[token_index] = self.entity_mapping[f"I-{annotation_tag}"]
                         break
 
@@ -146,11 +145,10 @@ class NubesDataset(Dataset):
                         if (existing_annotation.end < annotation.start) or (existing_annotation.start > annotation.end):
                             continue
 
-                        else:
-                            existing_annotation.end = max(existing_annotation.end, annotation.end)
-                            existing_annotation.start = min(existing_annotation.start, annotation.start)
-                            add_flag = False
-                            break
+                        existing_annotation.end = max(existing_annotation.end, annotation.end)
+                        existing_annotation.start = min(existing_annotation.start, annotation.start)
+                        add_flag = False
+                        break
 
                     if add_flag:
                         if f"B-{annotation.entity_name}" not in mapping:

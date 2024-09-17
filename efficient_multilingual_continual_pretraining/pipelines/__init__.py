@@ -5,6 +5,7 @@ from .ner_pipeline import NERPipeline
 from .nubes_pipeline import NubesPipeline
 from .openrepair_pipeline import OpenRepairPipeline
 from .rct_pipeline import RCTPipeline
+from .mlm_pipeline import MLMPipeline
 
 
 __all__ = [
@@ -15,4 +16,5 @@ __all__ = [
     "NubesPipeline",
     "RCTPipeline",
     "ChemProtPipeline",
+    "MLMPipeline",
 ]

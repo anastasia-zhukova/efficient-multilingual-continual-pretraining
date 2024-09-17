@@ -5,6 +5,7 @@ from .ner_dataset import NERDataset
 from .nubes_dataset import NubesDataset
 from .openrepair_dataset import OpenRepairDataset
 from .rct_dataset import RCTDataset
+from .mlm_dataset import MLMDataset
 
 
 __all__ = [
@@ -14,4 +15,6 @@ __all__ = [
     "NERDataset",
     "RCTDataset",
     "ChemProtDataset",
+    "NubesDataset",
+    "MLMDataset",
 ]

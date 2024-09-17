@@ -13,6 +13,7 @@ from efficient_multilingual_continual_pretraining.pipelines import (
     NubesPipeline,
     RCTPipeline,
     ChemProtPipeline,
+    MLMPipeline,
 )
 from efficient_multilingual_continual_pretraining.utils import generate_device, seed_everything
 
@@ -48,6 +49,8 @@ def main(config: DictConfig) -> None:
         pipeline = RCTPipeline()
     elif config["task"]["task_name"] == "chemprot":
         pipeline = ChemProtPipeline()
+    elif config["task"]["task_name"] == "pretrain_german":
+        pipeline = MLMPipeline()
     else:
         raise ValueError("Unsupported pipeline!")
 

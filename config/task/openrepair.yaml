@@ -13,7 +13,7 @@ dataloader:
   batch_size: 4
 
 optimizer:
-  lr: 0.000001
+  lr: 0.0000007
 
 n_epochs: 15
 save_path: "model_weights/openrepair_model.pth"
