@@ -7,7 +7,7 @@ from tqdm import tqdm
 import wandb
 from efficient_multilingual_continual_pretraining import logger
 from efficient_multilingual_continual_pretraining.metrics import MetricCalculator, NERMetricCalculator
-from efficient_multilingual_continual_pretraining.utils import generate_device, verbose_iterator
+from efficient_multilingual_continual_pretraining.utils import generate_device, verbose_iterator, log_with_message
 
 
 class BaseTrainer:
@@ -87,71 +87,111 @@ class BaseTrainer:
 
             logger.info(f"Finished epoch {epoch}/{n_epochs}.")
 
+    @log_with_message("pretraining the model")
     def pretrain(
         self,
         model: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         train_dataloader: torch.utils.data.DataLoader,
-        n_epochs: int = 10,
+        val_dataloader: torch.utils.data.DataLoader | None = None,
+        test_dataloader: torch.utils.data.DataLoader | None = None,
+        n_steps: int = 10_000,
         scheduler: torch.optim.lr_scheduler._LRScheduler = None,
         verbose: bool = True,
         watch: bool = True,
+        steps_to_log: int = 500,
     ) -> None:
-        for epoch in range(1, n_epochs + 1):
-            logger.info(f"Starting epoch {epoch}/{n_epochs}.")
-            epoch_train_state = self._pretrain_single_epoch(
-                model=model,
-                optimizer=optimizer,
-                train_dataloader=train_dataloader,
-                verbose=verbose,
-            )
+        model.train()
+        current_step = 0
+        train_loss = 0.0
+        total_loss_items = 0
+
+        while current_step < n_steps:
+            for batch in train_dataloader:
+                if current_step >= n_steps:
+                    break
+                current_step += 1
+
+                # Train steps
+                items_batch = {key: tensor.to(self.device) for key, tensor in batch.items()}
+                optimizer.zero_grad()
+                outputs = model(**items_batch)
+                loss = outputs.loss
+                loss.backward()
+                optimizer.step()
+
+                # Loss logging handling
+                n_loss_objects = len(items_batch["labels"])
+                train_loss += loss.item() * n_loss_objects
+                total_loss_items += n_loss_objects
+
+                # In case it is time to log
+                if current_step % steps_to_log == 0:
+                    log_dict = {
+                        "train": {"loss": train_loss / total_loss_items},
+                        "step": current_step,
+                    }
+                    if val_dataloader is not None:
+                        log_dict["val"] = {"loss": self.evaluate_pretrain(model, val_dataloader, verbose)}
+                    logger.debug(f"Reached logging checkpoint at step {current_step}, current scores: {log_dict}")
+
+                    self._safe_watcher_log(
+                        watch,
+                        log_dict,
+                        f"Error loading to watcher after pretrain at step {current_step}!",
+                    )
+
+                    # Reset running values
+                    train_loss = 0
+                    total_loss_items = 0
+                    model.train()
+
+            logger.info(f"Exhausted train dataset, current step {current_step}.")
             if scheduler is not None:
                 scheduler.step()
 
-            current_epoch_scores = {"pretrain": epoch_train_state}
+        if val_dataloader is not None or test_dataloader is not None:
+            log_dict = {
+                "step": current_step,
+            }
+            if val_dataloader is not None:
+                log_dict["val"] = {"loss": self.evaluate_pretrain(model, val_dataloader, verbose)}
+            if test_dataloader is not None:
+                log_dict["test"] = {"loss": self.evaluate_pretrain(model, test_dataloader, verbose)}
+            logger.debug(f"Reached the final checkpoint at step {current_step}, final scores: {log_dict}")
 
-            logger.debug(f"Current scores: {current_epoch_scores}")
-            current_epoch_scores["pretrain_epoch"] = epoch
+            self._safe_watcher_log(watch, log_dict, f"Error loading to watcher after pretrain at step {current_step}!")
 
-            if watch:
-                try:
-                    self._watcher_command(current_epoch_scores)
-                except Exception as e:
-                    logger.error(f"Error loading to watcher after pretrain at epoch {epoch}!")
-                    raise e
-
-            logger.info(f"Finished epoch {epoch}/{n_epochs}.")
-
-    def _pretrain_single_epoch(
-        self,
-        model: torch.nn.Module,
-        optimizer: torch.optim.Optimizer,
-        train_dataloader: torch.utils.data.DataLoader,
-        verbose: bool,
-    ) -> dict:
-        logger.info("Started pretraining the model.")
-        model.train()
-        pbar = verbose_iterator(train_dataloader, verbose, leave=False, desc="Training model")
-        self.metric_calculator.reset()
-        train_loss = 0.0
-        total_loss_items = 0
-        for batch in pbar:
-            items_batch = {key: tensor.to(self.device) for key, tensor in batch.items()}
-            optimizer.zero_grad()
-            outputs = model(**items_batch)
-            loss = outputs.loss
-            loss.backward()
-            optimizer.step()
-
-            n_loss_objects = len(items_batch["labels"])
-            train_loss += loss.item() * n_loss_objects
-            total_loss_items += n_loss_objects
-
-        result = {"train_loss": train_loss / total_loss_items}
-
-        logger.info("Finished training the model.")
-        logger.info(f"Model train scores: {result}")
-        return result
+    # def _pretrain_single_epoch(
+    #     self,
+    #     model: torch.nn.Module,
+    #     optimizer: torch.optim.Optimizer,
+    #     train_dataloader: torch.utils.data.DataLoader,
+    #     verbose: bool,
+    # ) -> dict:
+    #     logger.info("Started pretraining the model.")
+    #     model.train()
+    #     pbar = verbose_iterator(, verbose, leave=False, desc="Training model")
+    #     self.metric_calculator.reset()
+    #     train_loss = 0.0
+    #     total_loss_items = 0
+    #     for batch in pbar:
+    #         items_batch = {key: tensor.to(self.device) for key, tensor in batch.items()}
+    #         optimizer.zero_grad()
+    #         outputs = model(**items_batch)
+    #         loss = outputs.loss
+    #         loss.backward()
+    #         optimizer.step()
+    #
+    #         n_loss_objects = len(items_batch["labels"])
+    #         train_loss += loss.item() * n_loss_objects
+    #         total_loss_items += n_loss_objects
+    #
+    #     result = {"train_loss": train_loss / total_loss_items}
+    #
+    #     logger.info("Finished training the model.")
+    #     logger.info(f"Model train scores: {result}")
+    #     return result
 
     def _train_single_epoch(
         self,
@@ -258,3 +298,42 @@ class BaseTrainer:
         logger.info("Finished validating the model.")
         logger.info(f"Model val scores: {result}")
         return result
+
+    @log_with_message(
+        "evaluating the pretraining model",
+    )
+    @torch.no_grad()
+    def evaluate_pretrain(
+        self,
+        model: torch.nn.Module,
+        val_dataloader: torch.utils.data.DataLoader,
+        verbose: bool = True,
+    ) -> float:
+        model.eval()
+        pbar = tqdm(val_dataloader, leave=False, desc="Validating model") if verbose else val_dataloader
+        val_loss = 0.0
+        total_loss_items = 0
+
+        for batch in pbar:
+            items_batch = {key: tensor.to(self.device) for key, tensor in batch.items()}
+            outputs = model(**items_batch)
+            loss = outputs.loss
+
+            n_loss_objects = len(items_batch["labels"])
+            val_loss += loss.item() * n_loss_objects
+            total_loss_items += n_loss_objects
+
+        return val_loss / total_loss_items
+
+    def _safe_watcher_log(
+        self,
+        watch: bool,
+        log_dict: dict,
+        logger_message: str,
+    ) -> None:
+        if watch:
+            try:
+                self._watcher_command(log_dict)
+            except Exception as e:
+                logger.error(logger_message)
+                raise e

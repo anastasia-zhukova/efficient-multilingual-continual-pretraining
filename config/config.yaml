@@ -1,7 +1,10 @@
 defaults:
-  - task: openrepair
+  - task: amazon_reviews
   - _self_
 
-random_seed: 42
+random_seed: #42
+  - 42
+  - 13
+  - 7
 use_cuda_for_train: true
 use_watcher: true

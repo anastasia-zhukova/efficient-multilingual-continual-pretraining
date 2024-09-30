@@ -1,3 +1,4 @@
+from .base_pipeline import BasePipeline
 from .amazon_reviews_pipeline import AmazonReviewsPipeline
 from .cares_pipeline import CaresPipeline
 from .chemprot_pipeline import ChemProtPipeline
@@ -9,6 +10,7 @@ from .mlm_pipeline import MLMPipeline
 
 
 __all__ = [
+    "BasePipeline",
     "AmazonReviewsPipeline",
     "CaresPipeline",
     "OpenRepairPipeline",

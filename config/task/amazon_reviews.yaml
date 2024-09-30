@@ -10,7 +10,8 @@ dataloader:
   batch_size: 4
 
 optimizer:
-  lr: 0.0000001
+  lr: 0.0000005
 
-n_epochs: 15
+n_epochs: 10
+bert_weights_path: null
 save_path: "model_weights/amazon_reviews_model.pth"

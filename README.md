@@ -1,13 +1,13 @@
 # Efficient domain-adapted continual pretraining for (almost) any language
 
-## Project overview
-
-### How to run
+## How to run
 
 1. Install the dependencies with `poetry`;
 2. Select the required task in `config.yaml`;
 3. Make the `model_weights` folder in root if not present;
 4. Run `python3 main.py`.
+
+## Project overview
 
 ### Datasets
 
@@ -79,22 +79,21 @@ being present.
 
 The dataset provides an insight on how negation and uncertainty is expressed in speech. It provides sentences with
 positions of negation/uncertainty markers as well as what is actually being affected by those. While it provides a lot
-of different classes for the affected content (like [...]), we decided to simplify the task by introducing a single 
+of different classes for the affected content (like [...]), we decided to simplify the task by introducing a single
 category for all the **affected** content. This seems like to be a logical simplification, since in the end we want to
 know **what** is being affected and **how**.
 
 This is a classic NER scenario task where you have to find entities of different classes.
 
-#### PharmaCoNER 
+#### PharmaCoNER
 
 This is a corpus, which consists of documented clinical cases. For each case description, the chemical and protein
 entities positions are provided. Here, we had to solve another NER task with 4 entity types.
 
-#### CANTEMIST 
+#### CANTEMIST
 
 The dataset provides oncological clinical cases reports. Similarly to PharmaCoNER, it contains annotations for entities,
 this time it is the tumor morphology ones (still a NER task).
-
 
 #### CARES
 
@@ -104,7 +103,35 @@ and complete ICD-10 classification, in order to reduce the number of classes, we
 ICD code (column `general` in the dataset). Since the description can be associated with more than one code, this is a
 multi-label task we need to solve.
 
-### Methodology
+### Continual pretraining of models
+
+To further pretrain the models, we adopt the techniques
+from [Don't stop pretraining](https://aclanthology.org/2020.acl-main.740/),
+namely DAPT and TAPT. For both modes, we continued pretraining the already pretrained model on the corresponding
+dataset on the **masked language modelling task only**.
+
+For this task, we adopt another way to count how long our model is being trained.
+Instead of using epochs, we stick to the "steps" notation with a single step being one optimizer step done.
+In case the dataloader is exhausted, it is simply reset. The logging is done every `n` epochs in a way to have
+around 20 points to plot the graphic.
+
+#### DAPT setup
+
+For DAPT, we used and compared two approaches: using a "manually" collected DAPT and the one collected
+using [DSIR](https://arxiv.org/abs/2302.03169). For DSIR, we used the data from all the downstream tasks
+to collect the dataset. Then, the model was being continually pretrained for 85000 steps with batch size 8.
+
+The manually collected dataset included 1.2M entries, while the DSIR-collected one was only 100k.
+
+We tried using different learning rates for this task and ended up using 1e-4 as the best-performing one in terms
+of validation loss on MLM task.
+
+#### TAPT setup
+
+For TAPT, we used the data from all the tasks mixed together. The general approach was the same as the one we used for
+DAPT, but since there is much less data, we ended up using 40000 steps with batch size 8.
+
+### Downstream tasks methodology
 
 #### Amazon data
 
@@ -130,7 +157,7 @@ parameters from the config to train the model. These are used for all the models
 The common approach to the task has been already listed above in the `Datasets` section.
 The negative pairs generation is done using the pipeline's `_generate_data` method. Since there are no train/val sets,
 it is done with a train test split by the same method. After we have the problem and the solution texts, embeddings for
-each one are built independently. As in the previous task, we extract the `CLS` token's 
+each one are built independently. As in the previous task, we extract the `CLS` token's
 embeddings. We concatenate the two embeddings (for problem and solution) and pass it through the head:
 
 ```python
@@ -154,8 +181,8 @@ In this task, loading data is one of the tricky parts. It includes several steps
 1. The entities with their locations in text are acquired from `enitities.tsv` files;
 2. The relevant relations between these entities are determined from `gold_standard.tsv` files;
 3. The texts themselves are obtained from `abstracts.tsv`. Only the texts with the relations are included, the rest
-could be used in the future for language modelling tasks pretraining. As noted above, we concatenate the name and the
-abstract body together.
+   could be used in the future for language modelling tasks pretraining. As noted above, we concatenate the name and the
+   abstract body together.
 
 The collation function is of particular interest here. Since the abstracts are long, not all of them can fit in the
 token limit of the model. To simplify the task, we simply truncate the abstracts and ignore all the entities which were
@@ -180,7 +207,6 @@ nn.Sequential(
 Since for this task the data is highly imbalanced, we use weighted `CrossEntropyLoss` as noted above.
 
 `FacebookAI/roberta-base` is used as a core model.
-
 
 #### RCT
 
@@ -225,7 +251,7 @@ nn.Sequential(
 Since all the NER tasks (CANTEMIST, PharmaCoNER, NUBes) share the same methodology, the main difference being the data
 itself, it makes sense to group them.
 
-For all the datasets, we adopt the common annotation pattern: the tokens which start the entity are marked as 
+For all the datasets, we adopt the common annotation pattern: the tokens which start the entity are marked as
 `B-entity_name`, the ones that "continue" it are marked as `I-entity_name`. The annotations are stored in `.ann` files
 in `annotations` folder and the texts are stored in `.txt` files in `texts` folder inside the train/val folder.
 The annotations should follow the BRAT format.
@@ -253,7 +279,6 @@ nn.Sequential(
 
 `IIC/BETO_Galen` is used as a core model.
 
-
 ### Evaluation
 
 Depending on task, we used different approaches and tools to evaluate the model:
@@ -261,7 +286,7 @@ Depending on task, we used different approaches and tools to evaluate the model:
 - Binary classification: default set of metrics: accuracy, precision, recall, f1-score
 - Multiclass classification: same metrics list as above, but we use the macroaveraging to calculate the final metrics.
 - Multi-label classification: we assume that everything the model predicted more than 0.5 is "label is present" and
-then it is the same calculation as the one for multiclass.
+  then it is the same calculation as the one for multiclass.
 - NER: we use the f1-score, precision and recall from the `seqeval` in `strict` mode.
 
 The first three calculations are done using the `MetricCalculator`. It is built to be able to work in any of the given
@@ -270,20 +295,23 @@ with unit tests to ensure correct calculations. The NER calculations are done wi
 which wraps the `seqeval` calculations to ensure the common interface.
 
 ### Notable features
+
 - The project uses `loguru` to log some details of the process to make it easier to debug the project and get as-you-go
-information. The logger setup can be found in `efficient_multilingual_continual_pretraining/logger.py`.
+  information. The logger setup can be found in `efficient_multilingual_continual_pretraining/logger.py`.
 - We use `wandb` to monitor the models and store the future results to make experiments easier to track. It is turned
-on and off by the `use_watcher` in `config.yaml`. Make sure to login before you run it.
+  on and off by the `use_watcher` in `config.yaml`. Make sure to login before you run it.
 - Hydra is used to manage configs in a simple way. By selecting the required task in `task` (same as task's yaml name),
-it allows to easily change the task we are training and keep the hyperparameters different for different tasks.
-It also allows for command line overrides if necessary.
+  it allows to easily change the task we are training and keep the hyperparameters different for different tasks.
+  It also allows for command line overrides if necessary.
 - `poetry` is used to manage the project dependencies and to remove the unnecessary development dependencies in the
-future production.
-- The tasks are run from a single `main.py`. After the run, the models are being saved to `model_weights` folder. 
+  future production.
+- The tasks are run from a single `main.py`. After the run, the models are being saved to `model_weights` folder.
 
-### Intermediate results
+### Preliminary results
 
-#### Train
+#### Downstream tasks: pretrained model (train scores)
+
+We provide these as a reference for future researchers only.
 
 | Domain               | Model used   | Dataset        | Task type                   | Accuracy | Precision | Recall | F1 Score |
 |----------------------|--------------|----------------|-----------------------------|----------|-----------|--------|----------|
@@ -296,18 +324,46 @@ future production.
 | Spanish + BioMed     | BETO_Galen   | PharmaCoNER    | NER                         | N/A      | 0.542     | 0.514  | 0.528    |
 | Spanish + BioMed     | BETO_Galen   | NUBes          | NER                         | N/A      | 0.615     | 0.344  | 0.441    |
 
-#### Test
+#### Downstream tasks: pretrained model (validation scores)
 
 | Domain               | Model used   | Dataset        | Task type                   | Accuracy | Precision | Recall | F1 Score |
 |----------------------|--------------|----------------|-----------------------------|----------|-----------|--------|----------|
 | German + Electronics | gbert-base   | Amazon reviews | Multiclass classification   | 0.877    | 0.700     | 0.696  | 0.698    |
-| German + Electronics | gbert-base   | OpenRepairData | Binary classification       | 0.702    | 0.288     | 0.531  | 0.374    |
+| German + Electronics | gbert-base   | OpenRepairData | Binary classification       | 0.703    | 0.288     | 0.531  | 0.373    |
 | English + BioMed     | roberta-base | ChemProt       | Relationship classification | 0.781    | 0.763     | 0.201  | 0.402    |
 | English + BioMed     | roberta-base | PubMed 20k RCT | Sentences sentiment roles   | 0.946    | 0.815     | 0.807  | 0.806    |
 | Spanish + BioMed     | BETO_Galen   | CARES          | Multilabel classification   | 0.990    | 0.289     | 0.227  | 0.236    |
 | Spanish + BioMed     | BETO_Galen   | CANTEMIST      | NER                         | N/A      | 0.242     | 0.232  | 0.237    |
 | Spanish + BioMed     | BETO_Galen   | PharmaCoNER    | NER                         | N/A      | 0.242     | 0.272  | 0.257    |
 | Spanish + BioMed     | BETO_Galen   | NUBes          | NER                         | N/A      | 0.675     | 0.450  | 0.540    |
+
+#### Downstream tasks: comparison with augmented models (validation scores)
+
+| Dataset        | Enhancement   | Accuracy | Precision | Recall | F1 Score |
+|----------------|---------------|----------|-----------|--------|----------|
+| Amazon reviews | None          | 0.877    | 0.700     | 0.696  | 0.698    |
+| Amazon reviews | DAPT (manual) | 0.861    | 0.654     | 0.658  | 0.653    |
+| Amazon reviews | DAPT (DSIR)   | 0.783    | 0.697     | 0.684  | 0.679    |
+| Amazon reviews | TAPT          | 0.882    | 0.705     | 0.709  | 0.701    |
+| OpenRepairData | None          | 0.703    | 0.288     | 0.531  | 0.373    |
+| OpenRepairData | DAPT (manual) | 0.790    | 0.326     | 0.240  | 0.276    |
+| OpenRepairData | DAPT (DSIR)   | 0.702    | 0.287     | 0.528  | 0.372    |
+| OpenRepairData | TAPT          | 0.782    | 0.340     | 0.329  | 0.334    |
+
+The results for the remaining tasks are to be announced. 
+
+## Discussion
+
+First of all, unfortunately, at the given moment it is not possible to claim that DAPT improves the quality over the
+base pretrained models. Though using TAPT might result in slight improvement, the latter is not drastic. 
+
+We've experimented with using different learning rates for continual pretraining of the model. It has been shown that
+the 1e-5 learning rate significantly outperforms both 1e-6 and 1e-4 in terms of loss (train, validation and test
+-- all at once). We've tried changing the random seed, but the result remained consistent, so we decided to stick to it.
+
+Finally, it seems like there is not real difference between using manually collected DAPT and DSIR DAPT. Since DSIR
+DAPT collection can be automated, it may be promising once we find circumstances when DAPT provides a performance
+increase.
 
 ---
 
@@ -320,27 +376,28 @@ Name stuff adequately, use PEP and all the programming knowledge you have.
 
 ### Python
 
-Most packages are stable at python version 3.10, so we use it as default as noted in 
+Most packages are stable at python version 3.10, so we use it as default as noted in
 `pyproject.toml`. If you have any reasoning against that, please let us know and we'd discuss that.
 
 ### Git
+
 - Each person has their own branch for development, please use those rather than pushing everything to `main`
 
 - Naming of the branches should be so that it would be possible to identify
-who is the owner of a branch (for example, `jd-dev` where "jd" stands for John Doe).
+  who is the owner of a branch (for example, `jd-dev` where "jd" stands for John Doe).
 
 - Avoid using `--amend` and `force` stuff (only use when necessary) as those might affect the work of other people.
 - Write readable commit messages.
 - In general, the `main` branch should only contain code that is stable and "production-ready"
-(so no random exceptions would show up if we were to run it).
+  (so no random exceptions would show up if we were to run it).
 - Avoid storing and versioning some redundant files like `123123.py` or `test.ipynb`. Only stage and version
-the stuff that is relevant to the project.
+  the stuff that is relevant to the project.
 
 - Data goes to `data` (make dirs inside for different data sources, for example), notebooks go to `notebooks`,
-development code goes to the `efficient_multilingual_continual_pretraining` source.
-
+  development code goes to the `efficient_multilingual_continual_pretraining` source.
 
 ### Tests
+
 Tests are good (we suggest using `pytest`) but not necessary and should be kept near the code being tested.
 For example, you could have:
 
@@ -355,30 +412,34 @@ For example, you could have:
 ```
 
 ### Logging
+
 Logging is also good and is often helpful. `loguru` provides straightforward logging out-of-the-box.
 Please store logs in the `logs` folder which is excluded from versioning in .gitignore
 and do not version those to avoid clutter.
 
 ### Poetry
+
 We use [`poetry` to manage the dependencies](https://python-poetry.org/). The stuff you should know:
 
 - `poetry install` installs the current dependencies (including `dev` ones).
-- `poetry add <package_name>` works similarly to `pip install`. 
+- `poetry add <package_name>` works similarly to `pip install`.
 - The installed packages can be seen in `pyproject.toml`.
 - `poetry` also generates `poetry.lock` file. Be sure to version it as well.
 
 ### Codestyle
 
-We also suggest using [**File watchers**](https://medium.com/compendium/automatically-run-black-in-pycharm-on-windows-d2eab855a918)
-to keep consistent codestyle. The recommended watchers are `isort`, `black` and `ruff`. You could use the `watchers.xml` found
+We also suggest using [**File watchers
+**](https://medium.com/compendium/automatically-run-black-in-pycharm-on-windows-d2eab855a918)
+to keep consistent codestyle. The recommended watchers are `isort`, `black` and `ruff`. You could use the `watchers.xml`
+found
 [here](https://drive.google.com/file/d/1ycj9xTUWl4bfDnEbvlBcunvW8QBcbjvX/view?usp=sharing).
 Replace the paths to programs to the ones you have.
 
-Talking about docstrings, we suggest using the [NumPy style docstrings](https://numpydoc.readthedocs.io/en/latest/format.html). 
-
+Talking about docstrings, we suggest using
+the [NumPy style docstrings](https://numpydoc.readthedocs.io/en/latest/format.html).
 
 #### Known watcher issues
 
 1. `isort` aims to clear the unused imports. If you are making an import in the
-`init.py` file, the import most probably will be unused. To solve this, use the 
-`__all__` [(stackoverflow)](https://stackoverflow.com/questions/44834/what-does-all-mean-in-python):
+   `init.py` file, the import most probably will be unused. To solve this, use the
+   `__all__` [(stackoverflow)](https://stackoverflow.com/questions/44834/what-does-all-mean-in-python):

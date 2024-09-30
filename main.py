@@ -1,3 +1,4 @@
+import uuid
 import warnings
 
 import hydra
@@ -25,39 +26,46 @@ warnings.simplefilter("ignore", FutureWarning)
 @hydra.main(version_base=None, config_path="config", config_name="config")
 def main(config: DictConfig) -> None:
     config = OmegaConf.to_container(config, resolve=True)
-    seed_everything(config["random_seed"])
-    device = generate_device(config["use_cuda_for_train"])
+    seeds = [config["random_seed"]] if isinstance(config["random_seed"], int) else config["random_seed"]
+    print(seeds)
+    group_id = str(uuid.uuid4())
 
-    # WandB handling
-    if config["use_watcher"]:
-        wandb.init(
-            project="efficient_multilingual_continual_pretraining",
-            config=config,
-        )
+    for seed in seeds:
+        seed_everything(seed)
+        device = generate_device(config["use_cuda_for_train"])
 
-    if config["task"]["task_name"] == "amazon_reviews":
-        pipeline = AmazonReviewsPipeline()
-    elif config["task"]["task_name"] == "cares":
-        pipeline = CaresPipeline()
-    elif config["task"]["task_name"] == "openrepair":
-        pipeline = OpenRepairPipeline(seed=config["random_seed"])
-    elif config["task"]["task_name"] in ["cantemist", "pharmaconer"]:
-        pipeline = NERPipeline()
-    elif config["task"]["task_name"] == "nubes":
-        pipeline = NubesPipeline()
-    elif config["task"]["task_name"] == "rct":
-        pipeline = RCTPipeline()
-    elif config["task"]["task_name"] == "chemprot":
-        pipeline = ChemProtPipeline()
-    elif config["task"]["task_name"] == "pretrain_german":
-        pipeline = MLMPipeline()
-    else:
-        raise ValueError("Unsupported pipeline!")
+        # WandB handling
+        if config["use_watcher"]:
+            wandb.init(
+                project="efficient_multilingual_continual_pretraining",
+                config=config,
+                group=group_id,
+                job_type=config["task"]["task_name"],
+            )
 
-    pipeline.run(config, device)
+        if config["task"]["task_name"] == "amazon_reviews":
+            pipeline = AmazonReviewsPipeline()
+        elif config["task"]["task_name"] == "cares":
+            pipeline = CaresPipeline()
+        elif config["task"]["task_name"] == "openrepair":
+            pipeline = OpenRepairPipeline(seed=seed)
+        elif config["task"]["task_name"] in ["cantemist", "pharmaconer"]:
+            pipeline = NERPipeline()
+        elif config["task"]["task_name"] == "nubes":
+            pipeline = NubesPipeline()
+        elif config["task"]["task_name"] == "rct":
+            pipeline = RCTPipeline()
+        elif config["task"]["task_name"] == "chemprot":
+            pipeline = ChemProtPipeline()
+        elif config["task"]["task_name"] == "pretrain_german" or "pretrain_spanish_chilean":
+            pipeline = MLMPipeline()
+        else:
+            raise ValueError("Unsupported pipeline!")
 
-    if config["use_watcher"]:
-        wandb.finish()
+        pipeline.run(config, device)
+
+        if config["use_watcher"]:
+            wandb.finish()
 
 
 if __name__ == "__main__":

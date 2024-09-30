@@ -11,9 +11,10 @@ from efficient_multilingual_continual_pretraining.constants import PROJECT_ROOT
 from efficient_multilingual_continual_pretraining.data import OpenRepairDataset
 from efficient_multilingual_continual_pretraining.models import BaseTrainer, QAModel
 from efficient_multilingual_continual_pretraining.utils import log_with_message
+from efficient_multilingual_continual_pretraining.pipelines import BasePipeline
 
 
-class OpenRepairPipeline:
+class OpenRepairPipeline(BasePipeline):
     def __init__(
         self,
         seed: int,
@@ -70,15 +71,7 @@ class OpenRepairPipeline:
         )
 
         model = QAModel(head, **task_config["model"])
-
-        # Use pretrained weights
-        weights_path = PROJECT_ROOT / "model_weights/deepset_gbert_base_pretrained_100.pth"
-        state_dict = torch.load(weights_path)
-        filtered_state_dict = {k: v for k, v in state_dict.items() if k.startswith("bert.")}
-        filtered_state_dict = {k.replace("bert.", ""): v for k, v in filtered_state_dict.items()}
-        model.bert.load_state_dict(filtered_state_dict, strict=False)
-        nn.init.xavier_uniform_(model.bert.pooler.dense.weight)
-        model.bert.pooler.dense.bias.data.zero_()
+        self._load_weights(task_config, model)
 
         model = model.to(device)
         optimizer = AdamW(model.parameters(), **task_config["optimizer"])
