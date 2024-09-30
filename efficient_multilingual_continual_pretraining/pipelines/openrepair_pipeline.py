@@ -11,9 +11,10 @@ from efficient_multilingual_continual_pretraining.constants import PROJECT_ROOT
 from efficient_multilingual_continual_pretraining.data import OpenRepairDataset
 from efficient_multilingual_continual_pretraining.models import BaseTrainer, QAModel
 from efficient_multilingual_continual_pretraining.utils import log_with_message
+from efficient_multilingual_continual_pretraining.pipelines import BasePipeline
 
 
-class OpenRepairPipeline:
+class OpenRepairPipeline(BasePipeline):
     def __init__(
         self,
         seed: int,
@@ -70,6 +71,8 @@ class OpenRepairPipeline:
         )
 
         model = QAModel(head, **task_config["model"])
+        self._load_weights(task_config, model)
+
         model = model.to(device)
         optimizer = AdamW(model.parameters(), **task_config["optimizer"])
         criterion = torch.nn.CrossEntropyLoss(weight=torch.Tensor([1, 5])).to(device)

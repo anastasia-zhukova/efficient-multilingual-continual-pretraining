@@ -7,9 +7,10 @@ from torch.utils.data import DataLoader
 from efficient_multilingual_continual_pretraining.constants import PROJECT_ROOT
 from efficient_multilingual_continual_pretraining.data import BaseDataset
 from efficient_multilingual_continual_pretraining.models import BaseTrainer, ClassificationModel
+from efficient_multilingual_continual_pretraining.pipelines import BasePipeline
 
 
-class AmazonReviewsPipeline:
+class AmazonReviewsPipeline(BasePipeline):
     @classmethod
     def run(
         cls,
@@ -55,6 +56,8 @@ class AmazonReviewsPipeline:
         )
 
         model = ClassificationModel(model_head, **task_config["model"])
+        cls._load_weights(task_config, model)
+
         model = model.to(device)
         optimizer = AdamW(model.parameters(), **task_config["optimizer"])
 

@@ -15,5 +15,6 @@ dataloader:
 optimizer:
   lr: 0.000001
 
-n_epochs: 15
+n_epochs: 5
+bert_weights_path: null
 save_path: "model_weights/openrepair_model.pth"

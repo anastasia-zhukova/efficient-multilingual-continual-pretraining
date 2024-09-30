@@ -1,0 +1,19 @@
+task_name: atapt_german
+
+mlm_probability: 0.15
+text_column_name: text
+
+model:
+  bert_model_name: "deepset/gbert-base"
+
+dataloader:
+  num_workers: 4
+  pin_memory: true
+  batch_size: 8
+
+optimizer:
+  lr: 0.00001
+
+n_steps: 40000
+steps_to_log: 5000
+save_path: "model_weights/deepset_gbert_base_atapt.pth"
