@@ -79,7 +79,7 @@ being present.
 
 The dataset provides an insight on how negation and uncertainty is expressed in speech. It provides sentences with
 positions of negation/uncertainty markers as well as what is actually being affected by those. While it provides a lot
-of different classes for the affected content (like [...]), we decided to simplify the task by introducing a single
+of different classes for the affected content (like Disorders, Procedures and various scopes), we decided to simplify the task by introducing a single 
 category for all the **affected** content. This seems like to be a logical simplification, since in the end we want to
 know **what** is being affected and **how**.
 
@@ -379,17 +379,16 @@ Name stuff adequately, use PEP and all the programming knowledge you have.
 Most packages are stable at python version 3.10, so we use it as default as noted in
 `pyproject.toml`. If you have any reasoning against that, please let us know and we'd discuss that.
 
-### Git
 
-- Each person has their own branch for development, please use those rather than pushing everything to `main`
+- Each person has their own branch for development, please use those rather than pushing everything to `master`
 
 - Naming of the branches should be so that it would be possible to identify
   who is the owner of a branch (for example, `jd-dev` where "jd" stands for John Doe).
 
 - Avoid using `--amend` and `force` stuff (only use when necessary) as those might affect the work of other people.
 - Write readable commit messages.
-- In general, the `main` branch should only contain code that is stable and "production-ready"
-  (so no random exceptions would show up if we were to run it).
+- In general, the `master` branch should only contain code that is stable and "production-ready"
+(so no random exceptions would show up if we were to run it).
 - Avoid storing and versioning some redundant files like `123123.py` or `test.ipynb`. Only stage and version
   the stuff that is relevant to the project.
 
@@ -414,7 +413,7 @@ For example, you could have:
 ### Logging
 
 Logging is also good and is often helpful. `loguru` provides straightforward logging out-of-the-box.
-Please store logs in the `logs` folder which is excluded from versioning in .gitignore
+Please store logs in the `logs` folder which is excluded from versioning in `.gitignore`
 and do not version those to avoid clutter.
 
 ### Poetry
