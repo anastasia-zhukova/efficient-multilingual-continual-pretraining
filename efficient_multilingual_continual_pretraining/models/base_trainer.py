@@ -47,6 +47,7 @@ class BaseTrainer:
         train_dataloader: torch.utils.data.DataLoader,
         n_epochs: int = 10,
         val_dataloader: torch.utils.data.DataLoader | None = None,
+        test_dataloader: torch.utils.data.DataLoader | None = None,
         scheduler: torch.optim.lr_scheduler._LRScheduler = None,
         verbose: bool = True,
         watch: bool = True,
@@ -71,7 +72,7 @@ class BaseTrainer:
             if val_dataloader is not None:
                 epoch_val_scores = self.evaluate(
                     model=model,
-                    val_dataloader=val_dataloader,
+                    dataloader=val_dataloader,
                     verbose=verbose,
                 )
                 current_epoch_scores["val"] = epoch_val_scores
@@ -86,6 +87,23 @@ class BaseTrainer:
                     raise e
 
             logger.info(f"Finished epoch {epoch}/{n_epochs}.")
+
+        if test_dataloader is not None:
+            test_scores = self.evaluate(
+                model=model,
+                dataloader=test_dataloader,
+                verbose=verbose,
+                set_name="test",
+            )
+            test_scores = {"test": test_scores}
+            logger.debug(f"Final test scores: {test_scores}")
+            test_scores["train_epoch"] = n_epochs
+            if watch:
+                try:
+                    self._watcher_command(test_scores)
+                except Exception as e:
+                    logger.error("Error loading to watcher after final test!")
+                    raise e
 
     @log_with_message("pretraining the model")
     def pretrain(
@@ -249,17 +267,18 @@ class BaseTrainer:
 
         return result
 
+    @log_with_message("evaluating the model")
     @torch.no_grad()
     def evaluate(
         self,
         model: torch.nn.Module,
-        val_dataloader: torch.utils.data.DataLoader,
+        dataloader: torch.utils.data.DataLoader,
         verbose: bool = True,
+        set_name: str = "validation",
     ) -> dict[str, float]:
 
-        logger.info("Started validating the model.")
         model.eval()
-        pbar = tqdm(val_dataloader, leave=False, desc="Validating model") if verbose else val_dataloader
+        pbar = tqdm(dataloader, leave=False, desc=f"Evaluating model on {set_name=}") if verbose else dataloader
         self.metric_calculator.reset()
         val_loss = 0.0
         total_loss_items = 0
@@ -291,11 +310,10 @@ class BaseTrainer:
             total_loss_items += n_loss_objects
 
         result = {
-            "val_loss": val_loss / len(val_dataloader.dataset),
+            "val_loss": val_loss / len(dataloader.dataset),
             **self.metric_calculator.calculate_metrics(),
         }
 
-        logger.info("Finished validating the model.")
         logger.info(f"Model val scores: {result}")
         return result
 

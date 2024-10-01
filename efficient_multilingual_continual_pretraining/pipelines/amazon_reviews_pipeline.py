@@ -21,6 +21,7 @@ class AmazonReviewsPipeline(BasePipeline):
 
         train_dataframe = cls._clean_df(pd.read_csv(PROJECT_ROOT / "data/amazon_reviews_multi/train.csv"))
         val_dataframe = cls._clean_df(pd.read_csv(PROJECT_ROOT / "data/amazon_reviews_multi/validation.csv"))
+        test_dataframe = cls._clean_df(pd.read_csv(PROJECT_ROOT / "data/amazon_reviews_multi/test.csv"))
 
         train_dataset = BaseDataset(
             train_dataframe.drop("stars", axis=1),
@@ -32,6 +33,11 @@ class AmazonReviewsPipeline(BasePipeline):
             bert_model_name=task_config["model"]["bert_model_name"],
             targets=val_dataframe["stars"],
         )
+        test_dataset = BaseDataset(
+            test_dataframe.drop("stars", axis=1),
+            bert_model_name=task_config["model"]["bert_model_name"],
+            targets=test_dataframe["stars"],
+        )
 
         train_dataloader = DataLoader(
             train_dataset,
@@ -42,6 +48,12 @@ class AmazonReviewsPipeline(BasePipeline):
         val_dataloader = DataLoader(
             val_dataset,
             collate_fn=val_dataset.collate_fn,
+            shuffle=False,
+            **task_config["dataloader"],
+        )
+        test_dataloader = DataLoader(
+            test_dataset,
+            collate_fn=test_dataset.collate_fn,
             shuffle=False,
             **task_config["dataloader"],
         )
@@ -67,6 +79,7 @@ class AmazonReviewsPipeline(BasePipeline):
             optimizer,
             train_dataloader,
             val_dataloader=val_dataloader,
+            test_dataloader=test_dataloader,
             n_epochs=task_config["n_epochs"],
         )
 

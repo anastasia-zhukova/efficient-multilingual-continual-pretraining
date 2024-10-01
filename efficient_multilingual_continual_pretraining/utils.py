@@ -24,13 +24,11 @@ class log_with_message(ContextDecorator):
         self.start_time = None
 
     def __enter__(self):
-        logger.log(self.log_level, f"Started {self.message}.")
-        self.start_time = time.time()
-        return self
+        pass
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is not None:
-            logger.exception("An exception occurred:")
+            logger.exception(f"An exception occurred: {exc_type}")
         else:
             elapsed_time = time.time() - self.start_time
             if self.log_time:
@@ -48,6 +46,15 @@ class log_with_message(ContextDecorator):
     def __call__(self, func):
         @wraps(func)
         def wrapped(*args, **kwargs):
+            # Correct string concatenation
+            complete_message = f"Started {self.message}"
+            if "set_name" in kwargs:
+                complete_message += f", set name {kwargs['set_name']}."
+            else:
+                complete_message += "."
+
+            logger.log(self.log_level, complete_message)
+            self.start_time = time.time()
             with self:
                 return func(*args, **kwargs)
 
